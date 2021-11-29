@@ -59,9 +59,10 @@ module.exports = {
           payload = { ...payload, password: encryptedPassword }
         }
         await User.update(payload, { where: { id } })
-        return response(res, 200, true, 'Update profile berhasil')
+        const result = await User.findOne({ id })
+        return response(res, 200, true, 'Update profile berhasil', { email: result.email, username: result.username })
       } else {
-        return response(res, 404, true, 'Id user tidak ditemukan')
+        return response(res, 404, false, 'Id user tidak ditemukan')
       }
     } catch (err) {
       return response(res, 400, false, `${err.message || 'Bad Request'}`)
