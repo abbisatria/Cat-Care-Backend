@@ -1,18 +1,40 @@
 const response = require('../../helpers/response')
 const Gejala = require('../../models/gejala')
 const { Op } = require('sequelize')
+const path = require('path')
+const fs = require('fs')
 
 module.exports = {
   createGejala: async (req, res) => {
     try {
       const payload = req.body
 
-      const result = await Gejala.create(payload)
+      if (req.file) {
+        const tmpPath = req.file.path
+        const originalExt = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1]
+        const filename = req.file.filename + '.' + originalExt
+        const targetPath = path.resolve(path.resolve(__dirname, '../../'), `public/images/${filename}`)
 
-      if (result) {
-        return response(res, 200, true, 'Gejala berhasil dibuat')
+        const src = fs.createReadStream(tmpPath)
+        const dest = fs.createWriteStream(targetPath)
+
+        src.pipe(dest)
+
+        src.on('end', async () => {
+          const result = await Gejala.create({ ...payload, image: filename })
+          if (result) {
+            return response(res, 200, true, 'Gejala berhasil dibuat')
+          } else {
+            return response(res, 400, false, 'Gejala gagal dibuat')
+          }
+        })
       } else {
-        return response(res, 400, false, 'Gejala gagal dibuat')
+        const result = await Gejala.create(payload)
+        if (result) {
+          return response(res, 200, true, 'Gejala berhasil dibuat')
+        } else {
+          return response(res, 400, false, 'Gejala gagal dibuat')
+        }
       }
     } catch (err) {
       return response(res, 400, false, `${err.message || 'Bad Request'}`)
@@ -26,9 +48,37 @@ module.exports = {
       const existingGejala = await Gejala.findOne({ where: { id } })
 
       if (existingGejala) {
-        await Gejala.update(payload, { where: { id } })
+        if (req.file) {
+          const tmpPath = req.file.path
+          const originalExt = req.file.originalname.split('.')[req.file.originalname.split('.').length - 1]
+          const filename = req.file.filename + '.' + originalExt
+          const targetPath = path.resolve(path.resolve(__dirname, '../../'), `public/images/${filename}`)
 
-        return response(res, 200, true, 'Gejala berhasil diupdate', payload)
+          const src = fs.createReadStream(tmpPath)
+          const dest = fs.createWriteStream(targetPath)
+
+          src.pipe(dest)
+
+          src.on('end', async () => {
+            const currentImage = path.resolve(path.resolve(__dirname, '../../'), `public/images/${existingGejala.image}`)
+            if (fs.existsSync(currentImage)) {
+              fs.unlinkSync(currentImage)
+            }
+            const result = await Gejala.update({ ...payload, image: filename }, { where: { id } })
+            if (result) {
+              return response(res, 200, true, 'Gejala berhasil diupdate', payload)
+            } else {
+              return response(res, 400, false, 'Gejala gagal diupdate')
+            }
+          })
+        } else {
+          const result = await Gejala.update(payload, { where: { id } })
+          if (result) {
+            return response(res, 200, true, 'Gejala berhasil diupdate', payload)
+          } else {
+            return response(res, 400, false, 'Gejala gagal diupdate')
+          }
+        }
       } else {
         return response(res, 404, false, 'Id gejala tidak ditemukan')
       }
@@ -44,6 +94,10 @@ module.exports = {
 
       if (existingGejala) {
         await Gejala.destroy({ where: { id } })
+        const currentImage = path.resolve(path.resolve(__dirname, '../../'), `public/images/${existingGejala.image}`)
+        if (fs.existsSync(currentImage)) {
+          fs.unlinkSync(currentImage)
+        }
 
         return response(res, 200, true, 'Gejala berhasil dihapus', { nama: existingGejala.nama })
       } else {

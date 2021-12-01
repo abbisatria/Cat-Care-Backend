@@ -1,15 +1,15 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db')
 
-const Gejala = db.define('gejala', {
+const Solusi = db.define('solusi', {
   id: {
     type: Sequelize.INTEGER(11),
     primaryKey: true
   },
-  nama: {
-    type: Sequelize.CHAR(255)
+  id_penyakit: {
+    type: Sequelize.INTEGER(11)
   },
-  image: {
+  nama: {
     type: Sequelize.CHAR(255)
   }
 },
@@ -17,4 +17,4 @@ const Gejala = db.define('gejala', {
   freezeTableName: true
 })
 
-module.exports = Gejala
+module.exports = Solusi

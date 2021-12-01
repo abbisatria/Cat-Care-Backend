@@ -77,7 +77,6 @@ module.exports = {
 
       return response(res, 200, true, 'List Penyakit', finalResult)
     } catch (err) {
-      console.log(err)
       return response(res, 400, false, `${err.message || 'Bad Request'}`)
     }
   }
