@@ -10,6 +10,7 @@ const penyakitRouter = require('./routes/penyakit/router')
 const gejalaRouter = require('./routes/gejala/router')
 const solusiRouter = require('./routes/solusi/router')
 const faktorRouter = require('./routes/faktor/router')
+const ruleRouter = require('./routes/rule/router')
 
 const app = express()
 const URL = '/api/v1'
@@ -30,6 +31,7 @@ app.use(`${URL}/penyakit`, penyakitRouter)
 app.use(`${URL}/gejala`, gejalaRouter)
 app.use(`${URL}/solusi`, solusiRouter)
 app.use(`${URL}/faktor`, faktorRouter)
+app.use(`${URL}/rule`, ruleRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
