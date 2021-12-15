@@ -27,18 +27,19 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
 // URL
-app.use('/', (req, res) => {
-  return res.status(200).json({
-    status: 200,
-    message: 'Server Is Running Well'
-  })
-})
 app.use(`${URL}/users`, usersRouter)
 app.use(`${URL}/penyakit`, penyakitRouter)
 app.use(`${URL}/gejala`, gejalaRouter)
 app.use(`${URL}/solusi`, solusiRouter)
 app.use(`${URL}/faktor`, faktorRouter)
 app.use(`${URL}/rule`, ruleRouter)
+
+app.use('/', (req, res) => {
+  return res.status(200).json({
+    status: 200,
+    message: 'Server Is Running Well'
+  })
+})
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
