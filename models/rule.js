@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db')
+const Gejala = require('./gejala')
 
 const Rule = db.define('rule', {
   id: {
@@ -16,5 +17,7 @@ const Rule = db.define('rule', {
 {
   freezeTableName: true
 })
+
+Rule.hasOne(Gejala, { sourceKey: 'id_gejala', foreignKey: 'id' })
 
 module.exports = Rule

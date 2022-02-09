@@ -22,7 +22,7 @@ module.exports = {
       if (data) {
         req.userData = data
         if (req.userData.role > 1) {
-          return response(res, 401, 'You are not admin!')
+          return response(res, 401, false, 'You are not admin!')
         } else {
           return next()
         }

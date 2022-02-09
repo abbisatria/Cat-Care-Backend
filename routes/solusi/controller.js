@@ -70,7 +70,7 @@ module.exports = {
   },
   getListSolusi: async (req, res) => {
     try {
-      const { page, limit = 5, search = '' } = req.query
+      const { page, limit = 15, search = '' } = req.query
 
       const offset = (Number(page) > 1) ? (Number(page) * limit) - limit : 0
 
@@ -80,6 +80,7 @@ module.exports = {
             [Op.like]: `%${search}%`
           }
         },
+        order: [['id', 'DESC']],
         limit: Number(limit),
         offset: Number(offset)
       })

@@ -4,7 +4,7 @@ const Penyakit = require('../../models/penyakit')
 const { Op } = require('sequelize')
 const Faktor = require('../../models/faktor')
 const Solusi = require('../../models/solusi')
-const db = require('../../config/db')
+const Gejala = require('../../models/gejala')
 
 module.exports = {
   createRule: async (req, res) => {
@@ -129,7 +129,7 @@ module.exports = {
         attributes: [['id', 'id_penyakit'], ['nama', 'nama_penyakit']]
       })
 
-      const result = []
+      let result = {}
 
       gejalaPenyakit.forEach(val => {
         let total = 0
@@ -141,43 +141,70 @@ module.exports = {
         const data = {
           id_penyakit: val.dataValues.id_penyakit,
           nama_penyakit: val.dataValues.nama_penyakit,
-          faktor: val.dataValues.faktor.nama,
+          faktor: val.dataValues.faktor ? val.dataValues.faktor.nama : '-',
           solusi: val.dataValues.solusi.nama,
           total_persen: (total / val.dataValues.rules.length) * 100
         }
-        result.push(data)
+        if (result.id_penyakit) {
+          if (data.total_persen > result.total_persen) {
+            result = data
+          }
+        } else {
+          result = data
+        }
       })
 
       return response(res, 200, true, 'Hasil diagnosa', result)
     } catch (err) {
-      console.log(err)
       return response(res, 400, false, `${err.message || 'Bad Request'}`)
     }
   },
   getListRule: async (req, res) => {
     try {
-      const { page, limit = 5, search = '' } = req.query
+      const { page, limit = 15, search = '' } = req.query
 
       const offset = (Number(page) > 1) ? (Number(page) * limit) - limit : 0
 
-      const query = 'SELECT r.id_penyakit, p.nama FROM rule as r LEFT JOIN penyakit as p ON p.id = r.id_penyakit WHERE p.nama LIKE :search GROUP BY r.id_penyakit, p.nama'
-
-      const [result] = await db.query(`${query} LIMIT ${limit} OFFSET ${offset}`, {
-        replacements: {
-          search: `%${search}%`
-        }
-      })
-
-      const [count] = await db.query(`${query}`, {
-        replacements: {
-          search: `%${search}%`
-        }
+      const result = await Penyakit.findAndCountAll({
+        where: {
+          nama: {
+            [Op.like]: `%${search}%`
+          }
+        },
+        include: [
+          {
+            model: Rule,
+            include: [
+              {
+                model: Gejala,
+                attributes: ['nama']
+              }
+            ],
+            where: {
+              id_gejala: {
+                [Op.not]: null
+              }
+            },
+            attributes: ['id_gejala']
+          },
+          {
+            model: Faktor,
+            attributes: ['nama']
+          },
+          {
+            model: Solusi,
+            attributes: ['nama']
+          }
+        ],
+        order: [['id', 'DESC']],
+        limit: Number(limit),
+        offset: Number(offset)
       })
 
       const finalResult = {
-        count: count.length,
-        pageCount: Math.ceil(count.length / Number(limit)) || 0,
-        data: result
+        count: result.count,
+        pageCount: Math.ceil(result.count / Number(limit)) || 0,
+        data: result.rows
       }
 
       return response(res, 200, true, 'List Rule', finalResult)

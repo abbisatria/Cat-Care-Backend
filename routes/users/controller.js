@@ -29,13 +29,13 @@ module.exports = {
       if (existingUser) {
         const compare = bcrypt.compareSync(password, existingUser.password)
         if (compare) {
-          const token = jwt.sign({ username, email: existingUser.email }, process.env.APP_KEY)
+          const token = jwt.sign({ username, email: existingUser.email, role: existingUser.role }, process.env.APP_KEY)
           return response(res, 200, true, 'Login berhasil', { token })
         } else {
-          return response(res, 401, false, 'Password salah')
+          return response(res, 401, false, 'Password yang anda masukan salah')
         }
       } else {
-        return response(res, 200, true, 'Username tidak ditemukan, Silahkan register terlebih dahulu')
+        return response(res, 400, true, 'Username tidak ditemukan, Silahkan register terlebih dahulu')
       }
     } catch (err) {
       return response(res, 400, false, `${err.message || 'Bad Request'}`)

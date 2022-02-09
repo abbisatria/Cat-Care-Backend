@@ -109,27 +109,34 @@ module.exports = {
   },
   getListGejala: async (req, res) => {
     try {
-      const { page, limit = 5, search = '' } = req.query
+      const { page, limit = 15, search = '' } = req.query
 
       const offset = (Number(page) > 1) ? (Number(page) * limit) - limit : 0
 
-      const result = await Gejala.findAndCountAll({
-        where: {
-          nama: {
-            [Op.like]: `%${search}%`
-          }
-        },
-        limit: Number(limit),
-        offset: Number(offset)
-      })
+      let result
 
-      const finalResult = {
-        count: result.count,
-        pageCount: Math.ceil(result.count / Number(limit)) || 0,
-        data: result.rows
+      if (!page) {
+        result = await Gejala.findAll()
+        return response(res, 200, true, 'List Gejala', result)
+      } else {
+        result = await Gejala.findAndCountAll({
+          where: {
+            nama: {
+              [Op.like]: `%${search}%`
+            }
+          },
+          order: [['id', 'DESC']],
+          limit: Number(limit),
+          offset: Number(offset)
+        })
+
+        const finalResult = {
+          count: result.count,
+          pageCount: Math.ceil(result.count / Number(limit)) || 0,
+          data: result.rows
+        }
+        return response(res, 200, true, 'List Gejala', finalResult)
       }
-
-      return response(res, 200, true, 'List Penyakit', finalResult)
     } catch (err) {
       console.log(err)
       return response(res, 400, false, `${err.message || 'Bad Request'}`)
